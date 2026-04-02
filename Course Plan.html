@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Syllabus: Preventive Surveillance in Cybersecurity</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            blue: '#1e3a8a',
+                            light: '#eff6ff',
+                            red: '#dc2626',
+                            redlight: '#fef2f2',
+                            dark: '#0f172a',
+                            accent: '#10b981'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Required Placeholder Comments -->
+    <!-- Chosen Palette: Cyber Blue, Slate Dark, Emerald Accent, and Warning Red (Light Theme Background) -->
+    <!-- Application Structure Plan: A dashboard-style SPA prioritizing modular consumption. Opens with a mandatory "Acknowledgment Modal" for critical liability/lab warnings to ensure compliance. The main view uses a sidebar navigation (Overview, Objectives, Interactive Schedule, Evaluation) to chunk information logically. The Schedule is filterable (All, Lectures, Labs, Exams) to aid student planning. The newly added Open-Source and Integrated Project details are highlighted as feature cards in the Overview. An interactive Donut chart visualizes the grading weight. This structure improves consumption by breaking dense text into task-oriented, explorable views. -->
+    <!-- Visualization & Content Choices: 
+         - Liability Warnings -> Mandatory Modal -> Forces engagement before access -> JS/HTML
+         - Evaluation Plan -> Donut Chart -> Visually compare grading weights -> Chart.js
+         - Schedule -> Filterable Data Table/List -> Allows students to isolate labs or exams -> JS Array/DOM Manipulation
+         - Objectives -> Grid of styled cards -> Improves readability of distinct concepts -> HTML/Tailwind
+         - New Additions (Project/Open Source) -> Highlight Cards -> Draws attention to structural course features -> HTML/Tailwind
+         Confirming NO SVG/Mermaid used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; color: #334155; }
+        
+        /* Chart Container Requirements */
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 500px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 300px; 
+            max-height: 400px; 
+        }
+        @media (min-width: 768px) { 
+            .chart-container { height: 350px; } 
+        }
+        
+        /* Utility */
+        .hidden { display: none !important; }
+        .nav-item { cursor: pointer; transition: all 0.2s ease-in-out; }
+        .nav-item:hover { background-color: #e2e8f0; }
+        .nav-active { background-color: #1e3a8a !important; color: white !important; font-weight: bold; border-radius: 0.375rem; }
+        
+        /* Modal Backdrop */
+        #warning-modal { background-color: rgba(15, 23, 42, 0.9); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-cyber-blue selection:text-white">
+
+    <!-- Mandatory Warning Modal -->
+    <div id="warning-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full border-t-8 border-cyber-red overflow-hidden">
+            <div class="p-6 bg-cyber-redlight">
+                <h2 class="text-2xl font-bold text-cyber-red mb-2">⚠️ IMPORTANT LEGAL & LAB CONDUCT WARNING ⚠️</h2>
+                <p class="text-sm text-gray-700">Please read and acknowledge the following policies before accessing the course dashboard.</p>
+            </div>
+            <div class="p-6 space-y-4 max-h-[50vh] overflow-y-auto">
+                <div>
+                    <h3 class="font-bold text-cyber-dark">1. Third-Party Materials & Fair Use</h3>
+                    <p class="text-sm mt-1">Trademarks and tools are property of respective owners, used for educational purposes. The instructor assumes no liability for independent use of third-party platforms.</p>
+                </div>
+                <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+                    <h3 class="font-bold text-cyber-red">2. ZERO LIABILITY & LAB RULES</h3>
+                    <p class="text-sm mt-1"><strong>ALL practical exercises and labs MUST be conducted EXCLUSIVELY within the isolated, authorized lab environments provided.</strong> You are strictly forbidden from executing scans or monitoring against unauthorized external networks, the college, or peers. The institution assumes ZERO liability for unethical actions. Violations result in immediate expulsion.</p>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 border-t flex justify-end">
+                <button id="btn-acknowledge" class="bg-cyber-red hover:bg-red-700 text-white font-bold py-2 px-6 rounded transition-colors shadow-md">
+                    I Have Read and Acknowledge
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container" class="flex-grow container mx-auto px-4 py-8 hidden max-w-7xl">
+        
+        <!-- Header -->
+        <header class="bg-white rounded-xl shadow-sm p-6 mb-6 border-l-4 border-cyber-blue">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-cyber-dark">Preventive Surveillance in Cybersecurity</h1>
+                    <p class="text-lg text-gray-500 mt-1">Course Code: 420-D01-AB | Cohort: CYB-01</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">🕒 75 Total Hours</span>
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">📚 2.66 Credits</span>
+                    <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">💻 Online Modality</span>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-semibold">⚖️ 3-2-3 Ponderation</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            
+            <!-- Sidebar Navigation -->
+            <nav class="md:col-span-1 bg-white rounded-xl shadow-sm p-4 h-fit sticky top-4">
+                <ul class="space-y-2">
+                    <li onclick="switchTab('overview')" id="nav-overview" class="nav-item nav-active p-3 text-cyber-dark rounded-md font-medium">📋 Course Overview</li>
+                    <li onclick="switchTab('objectives')" id="nav-objectives" class="nav-item p-3 text-cyber-dark rounded-md font-medium">🎯 Objectives & Policies</li>
+                    <li onclick="switchTab('schedule')" id="nav-schedule" class="nav-item p-3 text-cyber-dark rounded-md font-medium">🗓️ Interactive Schedule</li>
+                    <li onclick="switchTab('evaluation')" id="nav-evaluation" class="nav-item p-3 text-cyber-dark rounded-md font-medium">📊 Evaluation Plan</li>
+                </ul>
+            </nav>
+
+            <!-- Content Area -->
+            <main class="md:col-span-3 bg-white rounded-xl shadow-sm p-6 min-h-[500px]">
+                
+                <!-- View: Overview -->
+                <section id="view-overview">
+                    <h2 class="text-2xl font-bold text-cyber-dark mb-4 border-b pb-2">Course Overview</h2>
+                    <p class="text-gray-600 mb-6 italic">This section provides the foundational context for the course, including the core philosophy behind our tools and labs.</p>
+                    
+                    <div class="prose max-w-none text-gray-700 space-y-4">
+                        <p>This course is the first in the Cybersecurity intensive program leading to an <strong>Attestation d'études collégiales (A.E.C.)</strong>.</p>
+                        <p>It provides students with an overview of cybersecurity prevention and response activities, serving as a foundational pillar for the profession. By the end of this course, students will be capable of monitoring a network to detect anomalies, intrusion attempts, and data exfiltration.</p>
+                        
+                        <p>Topics include the installation and configuration of network monitoring tools on Windows/Linux servers, router/switch monitoring, and the documentation of network anomalies using both on-premises equipment and cloud platforms like AWS and Azure.</p>
+
+                        <!-- Highlights for the new additions -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                            <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-xl shadow-sm">
+                                <h3 class="font-bold text-emerald-800 flex items-center gap-2 mb-2 text-lg">
+                                    <span>🔧</span> Open-Source & Custom Tools
+                                </h3>
+                                <p class="text-sm text-emerald-900">
+                                    The tools provided in this course are intended to serve simply as a "framework." Students are highly encouraged to research and utilize open-source alternatives based on their interests, or even create their own custom tools and use them instead during the labs!
+                                </p>
+                            </div>
+                            
+                            <div class="bg-indigo-50 border border-indigo-200 p-5 rounded-xl shadow-sm">
+                                <h3 class="font-bold text-indigo-800 flex items-center gap-2 mb-2 text-lg">
+                                    <span>🚀</span> Integrated Course Project
+                                </h3>
+                                <p class="text-sm text-indigo-900">
+                                    All hands-on labs are strategically connected. Rather than isolated exercises, they will continuously build upon one another to form one big, comprehensive project that will span during all of the Course!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View: Objectives & Policies -->
+                <section id="view-objectives" class="hidden">
+                    <h2 class="text-2xl font-bold text-cyber-dark mb-4 border-b pb-2">Competencies & Policies</h2>
+                    <p class="text-gray-600 mb-6 italic">Explore the core competencies (EZ01) you will master and the academic policies governing your success and integrity in this course.</p>
+                    
+                    <h3 class="text-xl font-bold mb-3 text-cyber-blue">Competency Statement (EZ01)</h3>
+                    <p class="mb-4"><em>To monitor a computer network from a cybersecurity perspective.</em></p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                        <div class="border rounded-lg p-4 bg-gray-50 hover:shadow-md transition-shadow">
+                            <span class="text-2xl mb-2 block">1️⃣</span>
+                            <h4 class="font-bold text-cyber-dark">Identify Concepts</h4>
+                            <p class="text-sm text-gray-600">Recognize CIA issues, differentiate cyberattack types, and distinguish performance vs. security issues.</p>
+                        </div>
+                        <div class="border rounded-lg p-4 bg-gray-50 hover:shadow-md transition-shadow">
+                            <span class="text-2xl mb-2 block">2️⃣</span>
+                            <h4 class="font-bold text-cyber-dark">Analyze Topology</h4>
+                            <p class="text-sm text-gray-600">Examine organizational contexts, identify monitoring needs, and prioritize activities.</p>
+                        </div>
+                        <div class="border rounded-lg p-4 bg-gray-50 hover:shadow-md transition-shadow">
+                            <span class="text-2xl mb-2 block">3️⃣</span>
+                            <h4 class="font-bold text-cyber-dark">Configure Tools</h4>
+                            <p class="text-sm text-gray-600">Select tools, configure baselines, and set up alerts on systems.</p>
+                        </div>
+                        <div class="border rounded-lg p-4 bg-gray-50 hover:shadow-md transition-shadow">
+                            <span class="text-2xl mb-2 block">4️⃣</span>
+                            <h4 class="font-bold text-cyber-dark">Detect Anomalies</h4>
+                            <p class="text-sm text-gray-600">Use tools to analyze network traffic, event logs, and files to detect and properly document incidents.</p>
+                        </div>
+                        <div class="border rounded-lg p-4 bg-gray-50 hover:shadow-md transition-shadow sm:col-span-2">
+                            <span class="text-2xl mb-2 block">5️⃣</span>
+                            <h4 class="font-bold text-cyber-dark">Optimize Tools</h4>
+                            <p class="text-sm text-gray-600">Update baselines, reduce false positives/performance impact, and recommend new capabilities.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold mb-3 text-cyber-blue border-t pt-4">Course Policies</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="mr-2">⏳</span>
+                            <div><strong>Late Submissions:</strong> Work submitted late may result in a 10% deduction from the grade per calendar day.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">🏛️</span>
+                            <div><strong>Attendance:</strong> Please refer to the Continuing Education Policies and Guidelines.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">⚖️</span>
+                            <div><strong>Academic Integrity:</strong> Cheating and plagiarism are strictly prohibited and will be dealt with according to the College Academic Integrity Procedure.</div>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- View: Schedule -->
+                <section id="view-schedule" class="hidden">
+                    <h2 class="text-2xl font-bold text-cyber-dark mb-4 border-b pb-2">Interactive Course Schedule</h2>
+                    <p class="text-gray-600 mb-4 italic">Use the filters below to explore the 75 hours of course content, distinguishing between lectures, hands-on labs, and critical examination dates.</p>
+                    
+                    <!-- Filters -->
+                    <div class="flex flex-wrap gap-2 mb-6 border-b pb-4">
+                        <button onclick="filterSchedule('All')" class="sched-filter px-4 py-1 rounded bg-cyber-blue text-white text-sm font-semibold transition-colors">All Sessions</button>
+                        <button onclick="filterSchedule('Lecture')" class="sched-filter px-4 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm font-semibold transition-colors">Lectures</button>
+                        <button onclick="filterSchedule('Lab')" class="sched-filter px-4 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm font-semibold transition-colors">Labs</button>
+                        <button onclick="filterSchedule('Exam')" class="sched-filter px-4 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm font-semibold transition-colors">Exams & Reviews</button>
+                    </div>
+
+                    <!-- Dynamic Schedule Container -->
+                    <div id="schedule-container" class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- View: Evaluation -->
+                <section id="view-evaluation" class="hidden">
+                    <h2 class="text-2xl font-bold text-cyber-dark mb-4 border-b pb-2">Evaluation Breakdown</h2>
+                    <p class="text-gray-600 mb-6 italic">This interactive chart illustrates how your final grade is calculated. Hover over the segments to see the exact weight and details of each evaluation component.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <!-- Chart Container -->
+                        <div class="chart-container">
+                            <canvas id="evalChart"></canvas>
+                        </div>
+                        
+                        <!-- Details Table -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm text-left">
+                                <thead class="bg-gray-100 text-gray-700 uppercase">
+                                    <tr>
+                                        <th class="py-3 px-4">Evaluation Type</th>
+                                        <th class="py-3 px-4 text-right">Weight</th>
+                                        <th class="py-3 px-4 text-center">Final Phase?</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-medium text-cyber-dark">Hands-on Labs (6 @ 5%)</td>
+                                        <td class="py-3 px-4 text-right">30%</td>
+                                        <td class="py-3 px-4 text-center text-gray-400">-</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-medium text-cyber-dark">Quizzes (5 @ 2%)</td>
+                                        <td class="py-3 px-4 text-right">10%</td>
+                                        <td class="py-3 px-4 text-center text-gray-400">-</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-medium text-cyber-dark">Mid-Term Exam</td>
+                                        <td class="py-3 px-4 text-right">20%</td>
+                                        <td class="py-3 px-4 text-center text-green-600 font-bold">✔</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-medium text-cyber-dark">Course Procedure Manual</td>
+                                        <td class="py-3 px-4 text-right">10%</td>
+                                        <td class="py-3 px-4 text-center text-green-600 font-bold">✔</td>
+                                    </tr>
+                                    <tr class="bg-blue-50 font-bold hover:bg-blue-100">
+                                        <td class="py-3 px-4 text-cyber-blue">Final Exam</td>
+                                        <td class="py-3 px-4 text-right text-cyber-blue">30%</td>
+                                        <td class="py-3 px-4 text-center text-green-600">✔</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="text-xs text-gray-500 mt-2 text-right">Total Final Eval Value: 100%</p>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- 1. State Management & Data ---
+        
+        // Schedule Data Parsed exactly from Source Markdown
+        const scheduleData = [
+            { session: 1, date: '2026-05-06', day: 'Wed', topics: 'Course Introduction (3h) + Cybersecurity Fundamentals Lecture (0.5h)', hours: 3.5, type: 'Lecture' },
+            { session: 2, date: '2026-05-09', day: 'Sat', topics: 'Cybersecurity Fundamentals, Cryptography basics, Case Studies', hours: 5.0, type: 'Lecture' },
+            { session: 3, date: '2026-05-12', day: 'Tue', topics: 'Hands-on Lab 1: Threat Classification & Risk Assessment', hours: 3.5, type: 'Lab' },
+            { session: 4, date: '2026-05-13', day: 'Wed', topics: 'Network Topology, Segmentation, Defensible Architecture', hours: 3.5, type: 'Lecture' },
+            { session: 5, date: '2026-05-16', day: 'Sat', topics: 'Hands-on Lab 2: Mapping Architecture & Vulnerability ID', hours: 5.0, type: 'Lab' },
+            { session: 6, date: '2026-05-19', day: 'Tue', topics: 'Installing & Configuring Monitoring Tools (Wireshark, Splunk, Nagios)', hours: 3.5, type: 'Lecture' },
+            { session: 7, date: '2026-05-20', day: 'Wed', topics: 'Hands-on Lab 3: Configure Wireshark, SNMP, set up alerts', hours: 3.5, type: 'Lab' },
+            { session: 8, date: '2026-05-23', day: 'Sat', topics: 'Midterm Review (3h) + Catch-up/Lab Buffer (2h)', hours: 5.0, type: 'Exam' },
+            { session: 9, date: '2026-05-26', day: 'Tue', topics: 'Midterm Exam (3h) + Admin Wrap-up (0.5h)', hours: 3.5, type: 'Exam' },
+            { session: 10, date: '2026-05-27', day: 'Wed', topics: 'Detecting & Analyzing Anomalies (Behavioral Analysis)', hours: 3.5, type: 'Lecture' },
+            { session: 11, date: '2026-06-02', day: 'Tue', topics: 'Hands-on Lab 4: Traffic/Log Analysis & Normal vs Anomalous Traffic', hours: 3.5, type: 'Lab' },
+            { session: 12, date: '2026-06-03', day: 'Wed', topics: 'Incident Response, Threat Intelligence, MITRE ATT&CK', hours: 3.5, type: 'Lecture' },
+            { session: 13, date: '2026-06-06', day: 'Sat', topics: 'Hands-on Lab 5: Live Threat Detection Simulation & Forensic Analysis', hours: 5.0, type: 'Lab' },
+            { session: 14, date: '2026-06-09', day: 'Tue', topics: 'Optimizing Tools, Reducing False Positives, Cloud Monitoring (AWS/Azure)', hours: 3.5, type: 'Lecture' },
+            { session: 15, date: '2026-06-10', day: 'Wed', topics: 'Hands-on Lab 6: Custom Scripts & Cloud Dashboards', hours: 3.5, type: 'Lab' },
+            { session: 16, date: '2026-06-13', day: 'Sat', topics: 'Final Exam Review (3h) + Lab Buffer / Course Procedure Manual Due (3h)', hours: 6.0, type: 'Exam' },
+            { session: 17, date: '2026-06-16', day: 'Tue', topics: 'Final Review Recap, Ethical reinforcement, Q&A', hours: 3.5, type: 'Lecture' },
+            { session: 18, date: '2026-06-17', day: 'Wed', topics: 'Final Exam (3h) + Course Conclusion (0.5h)', hours: 3.5, type: 'Exam' }
+        ];
+
+        let chartInstance = null;
+
+        // --- 2. Core Interaction Handling ---
+
+        // Handle Modal Dismissal
+        document.getElementById('btn-acknowledge').addEventListener('click', () => {
+            document.getElementById('warning-modal').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            // Render Initial Dynamic Content
+            renderSchedule('All');
+        });
+
+        // Tab Navigation Logic
+        function switchTab(tabId) {
+            // Hide all views
+            const views = ['overview', 'objectives', 'schedule', 'evaluation'];
+            views.forEach(v => {
+                document.getElementById('view-' + v).classList.add('hidden');
+                document.getElementById('nav-' + v).classList.remove('nav-active');
+            });
+
+            // Show selected view
+            document.getElementById('view-' + tabId).classList.remove('hidden');
+            document.getElementById('nav-' + tabId).classList.add('nav-active');
+
+            // Lazy Load Chart if Evaluation Tab is clicked
+            if (tabId === 'evaluation' && !chartInstance) {
+                initChart();
+            }
+        }
+
+        // Schedule Rendering & Filtering Logic
+        function renderSchedule(filterType) {
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = ''; // Clear current
+
+            // Update Filter Buttons Style
+            document.querySelectorAll('.sched-filter').forEach(btn => {
+                if(btn.innerText.includes(filterType) || (filterType === 'All' && btn.innerText === 'All Sessions')){
+                    btn.classList.add('bg-cyber-blue', 'text-white');
+                    btn.classList.remove('bg-gray-200', 'text-gray-700');
+                } else {
+                    btn.classList.remove('bg-cyber-blue', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                }
+            });
+
+            let filteredData = scheduleData;
+            if (filterType !== 'All') {
+                filteredData = scheduleData.filter(item => item.type === filterType);
+            }
+
+            if (filteredData.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 p-4">No sessions found for this filter.</p>';
+                return;
+            }
+
+            filteredData.forEach(item => {
+                // Determine icon/color based on type
+                let icon = '📖';
+                let borderClass = 'border-gray-200 bg-white';
+                
+                if(item.type === 'Lab') {
+                    icon = '💻';
+                    borderClass = 'border-emerald-300 bg-emerald-50';
+                } else if (item.type === 'Exam') {
+                    icon = '📝';
+                    borderClass = 'border-red-300 bg-red-50';
+                }
+
+                const cardHtml = `
+                    <div class="p-4 border rounded-lg ${borderClass} flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between transition-all hover:shadow-md">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 flex flex-col items-center justify-center bg-white rounded shadow-sm border border-gray-100 shrink-0">
+                                <span class="text-xs font-bold text-gray-500 uppercase">${item.day}</span>
+                                <span class="text-lg font-extrabold text-cyber-dark">${item.date.split('-')[2]}</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-cyber-dark text-lg flex items-center gap-2">
+                                    <span>${icon}</span> Session ${item.session}
+                                </h4>
+                                <p class="text-sm text-gray-700 mt-1">${item.topics}</p>
+                            </div>
+                        </div>
+                        <div class="shrink-0 pt-2 sm:pt-0">
+                            <span class="px-3 py-1 bg-white border rounded-full text-xs font-bold text-gray-600 shadow-sm whitespace-nowrap">
+                                ⏱️ ${item.hours} hrs
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        // Expose filter globally for inline onclick
+        window.filterSchedule = renderSchedule;
+
+        // --- 3. Chart.js Initialization ---
+        function initChart() {
+            const ctx = document.getElementById('evalChart').getContext('2d');
+            
+            // Evaluation Data
+            const labels = ['Hands-on Labs', 'Quizzes', 'Mid-Term Exam', 'Procedure Manual', 'Final Exam'];
+            const data = [30, 10, 20, 10, 30];
+            const bgColors = [
+                '#10b981', // emerald (Labs)
+                '#8b5cf6', // purple (Quizzes)
+                '#f59e0b', // amber (Midterm)
+                '#3b82f6', // blue (Manual)
+                '#ef4444'  // red (Final)
+            ];
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: bgColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: { family: "'Segoe UI', sans-serif", size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.parsed + '%';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+
